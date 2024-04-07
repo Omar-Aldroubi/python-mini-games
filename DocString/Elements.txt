@@ -1,0 +1,36 @@
+Help on module elements:
+
+AUTHOR
+    AMOURI MOUSSA 
+    ALDROUBI OMAR
+    HAMOUCHE RAFIK
+
+NAME
+    elements
+
+CLASSES
+    builtins.object
+        Element
+    
+    class Element(builtins.object)
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  Conway = <class 'elements.Element.Conway'>
+     |  
+     |  Snake = <class 'elements.Element.Snake'>
+     |  
+     |  Turmite = <class 'elements.Element.Turmite'>
+
+FILE
+    /Users/macbookpro/Desktop/opporoject/aldroubi_amouri_hamouch/elements.py
+
+

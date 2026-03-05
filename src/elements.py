@@ -42,15 +42,6 @@ class Element:
             self.direction = 0
             self.state = [[0 for _ in range(grid_size[1])] for _ in range(grid_size[0])]
 
-        def move_turmite(self):
-
-            pass
-
-        def update_state(self):
-
-            pass
-
-
     class Conway:
         class Conway:
             def __init__(self, master, planet_tk, grid_size=(20, 20), cell_size=20):

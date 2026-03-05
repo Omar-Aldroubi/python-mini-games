@@ -1,18 +1,24 @@
 import tkinter as tk
 from tkinter import PhotoImage
-import random
-from PlanetTk import PlanetTk
 import tkinter.font as font
 import time
-from tkmacosx import Button
+import random
+import pygame
+import platform
+
 try:
     import winsound
 except ImportError:
-    import pygame
-    pygame.mixer.init()
+    winsound = None
+
+if platform.system() == "Darwin":
+    from tkmacosx import Button
+else:
+    Button = tk.Button
+
+from PlanetTk import PlanetTk
 
 class SnakeGame(PlanetTk):
-
     def __init__(self, master, grid_size=(20, 20), cell_size=20):
         super().__init__(master, cell_size)
         self.master = master
@@ -20,14 +26,14 @@ class SnakeGame(PlanetTk):
         self.cell_size = cell_size
 
         self.canvas = tk.Canvas(master, width=grid_size[1] * cell_size,height=(grid_size[0] * cell_size))
-
         self.canvas.place(relx=0.5, rely=0.5, anchor='center')
 
-
-        self.apple_image_icon = PhotoImage(file="./img/apple_image.png")
-        self.apple_icon_label = tk.Label(self.master, image=self.apple_image_icon,bg="#FFFACD")
-
-        self.apple_icon_label.place(relx=0.36, rely=0.05, anchor='center')
+        try:
+            self.apple_image_icon = PhotoImage(file="./img/apple_image.png")
+            self.apple_icon_label = tk.Label(self.master, image=self.apple_image_icon,bg="#FFFACD")
+            self.apple_icon_label.place(relx=0.36, rely=0.05, anchor='center')
+        except:
+            pass
 
         self.score = 0
         self.start_time = time.time()
@@ -36,37 +42,26 @@ class SnakeGame(PlanetTk):
         self.direction = "Right"
         self.apple = None
         self.rotting_apples = []
-        self.score = 0
         self.game_over = False
         self.base_speed = 0.15
         self.speed = self.base_speed
         self.apples_eaten = 0
 
-
         self.score_label = tk.Label(self.master, text=f"Score: {self.score}", font=('Helvetica', 16),bg="#FFFACD",fg="black")
-
         self.score_label.place(relx=0.4, rely=0.05, anchor='center')
 
-
         self.timer_label = tk.Label(self.master, text="Time: 0s", font=('Helvetica', 16),bg="#FFFACD",fg="black")
-
         self.timer_label.place(relx=0.5, rely=0.05, anchor='center')
 
-
-        self.music_image = PhotoImage(file="./img/speaker.png")
-        self.music_button = Button(self.master, image=self.music_image, command=self.toggle_music, highlightbackground='black', bg='#FFFACD', fg='black')
-        self.music_button.place(relx=0.7, rely=0.05, anchor='center')
-
-
         self.music_on = False
+        pygame.mixer.init()
         self.start_music()
 
         self.master.bind("<KeyPress>", self.change_direction)
+        self.start_game()
 
     def update_score_and_timer(self):
-
         self.score_label.config(text=f"Score: {self.score}")
-
         elapsed_time = int(time.time() - self.start_time)
         self.timer_label.config(text=f"Time: {elapsed_time}s")
 
@@ -78,23 +73,27 @@ class SnakeGame(PlanetTk):
         self.music_on = not self.music_on
 
     def start_music(self):
-        try:
-            winsound.PlaySound("./audio/AdhesiveWombat - Night Shade.wav", winsound.SND_ASYNC | winsound.SND_LOOP)
-        except NameError:
-            pygame.mixer.music.load("./audio/AdhesiveWombat - Night Shade.wav")
-            pygame.mixer.music.play(-1)
+        if winsound:
+            try:
+                winsound.PlaySound("./audio/AdhesiveWombat - Night Shade.wav", winsound.SND_ASYNC | winsound.SND_LOOP)
+            except: pass
+        else:
+            try:
+                pygame.mixer.music.load("./audio/AdhesiveWombat - Night Shade.wav")
+                pygame.mixer.music.play(-1)
+            except: pass
 
     def stop_music(self):
-        try:
-            winsound.PlaySound(None, winsound.SND_ASYNC)
-        except NameError:
+        if winsound:
+            try: winsound.PlaySound(None, winsound.SND_ASYNC)
+            except: pass
+        else:
             pygame.mixer.music.stop()
 
     def start_game(self):
         self.generate_apple()
         self.generate_rotting_apples()
         self.update()
-
 
     def restart_game(self):
         self.restart_button.destroy()
@@ -110,6 +109,10 @@ class SnakeGame(PlanetTk):
         self.stop_music()
 
     def update(self):
+        if not self.canvas.winfo_exists():
+            self.stop_music()
+            return
+
         myFont = font.Font(family='helvetica', size=24, weight='bold')
         if not self.game_over:
             self.move_snake()
@@ -117,25 +120,19 @@ class SnakeGame(PlanetTk):
             self.check_apple()
             self.check_rotting_apple()
             self.update_score_and_timer()
-            self.draw(self.snake, self.apple, self.rotting_apples,self.direction)
+            self.draw(self.snake, self.apple, self.rotting_apples, self.direction)
             self.master.after(int(self.speed * 1000), self.update)
         else:
             self.restart_button = tk.Button(self.master, text="Recommencer", command=self.restart_game, bg='white', fg='black', font=myFont)
             self.restart_button.place(relx=0.5, rely=0.5, width=200, height=50, anchor='center')
 
-
-
     def move_snake(self):
         head = self.snake[0]
         new_head = head
-        if self.direction == "Up":
-            new_head = (head[0] - 1, head[1])
-        elif self.direction == "Down":
-            new_head = (head[0] + 1, head[1])
-        elif self.direction == "Left":
-            new_head = (head[0], head[1] - 1)
-        elif self.direction == "Right":
-            new_head = (head[0], head[1] + 1)
+        if self.direction == "Up": new_head = (head[0] - 1, head[1])
+        elif self.direction == "Down": new_head = (head[0] + 1, head[1])
+        elif self.direction == "Left": new_head = (head[0], head[1] - 1)
+        elif self.direction == "Right": new_head = (head[0], head[1] + 1)
         self.snake.insert(0, new_head)
         self.snake.pop()
 
@@ -181,5 +178,3 @@ class SnakeGame(PlanetTk):
                (event.keysym == "Left" and self.direction != "Right") or \
                (event.keysym == "Right" and self.direction != "Left"):
                 self.direction = event.keysym
-
-

@@ -1,11 +1,8 @@
 import tkinter as tk
-from PlanetAlpha import Grid
 import copy
-from elements import Element
-
 
 class ConwayGame:
-    def __init__(self, master,planet_tk, grid_size=(20, 20), cell_size=20):
+    def __init__(self, master, planet_tk, grid_size=(20, 20), cell_size=20):
         self.master = master
         self.planet_tk = planet_tk
         self.grid_size = grid_size
@@ -13,20 +10,22 @@ class ConwayGame:
         self.grid = [[0] * grid_size[1] for _ in range(grid_size[0])]
         self.running = False
 
-        self.planet_tk.canvas = tk.Canvas(master, width=grid_size[1] * cell_size,
-                                height=grid_size[0] * cell_size)
+        self.planet_tk.canvas = tk.Canvas(master, width=grid_size[1] * cell_size, height=grid_size[0] * cell_size)
         self.planet_tk.canvas.pack()
 
         self.planet_tk.canvas.bind('<Button-1>', self.toggle_cell)
 
-        self.start_button = tk.Button(master, text='Start', command=self.start_game)
-        self.start_button.pack(side='left')
+        self.button_frame = tk.Frame(master, bg='#FFFACD')
+        self.button_frame.pack(pady=10)
 
-        self.stop_button = tk.Button(master, text='Stop', command=self.stop_game)
-        self.stop_button.pack(side='left')
+        self.start_button = tk.Button(self.button_frame, text='Start', command=self.start_game)
+        self.start_button.pack(side='left', padx=5)
 
-        self.clear_button = tk.Button(master, text='Clear', command=self.clear_grid)
-        self.clear_button.pack(side='left')
+        self.stop_button = tk.Button(self.button_frame, text='Stop', command=self.stop_game)
+        self.stop_button.pack(side='left', padx=5)
+
+        self.clear_button = tk.Button(self.button_frame, text='Clear', command=self.clear_grid)
+        self.clear_button.pack(side='left', padx=5)
 
         self.draw_grid()
 
@@ -38,7 +37,6 @@ class ConwayGame:
                 self.planet_tk.canvas.create_rectangle(j * self.cell_size, i * self.cell_size,
                                              (j + 1) * self.cell_size, (i + 1) * self.cell_size,
                                              outline='grey', fill=color)
-
 
     def toggle_cell(self, event):
         x, y = event.x // self.cell_size, event.y // self.cell_size
@@ -59,6 +57,10 @@ class ConwayGame:
         self.draw_grid()
 
     def run_game(self):
+        if not hasattr(self.planet_tk, 'canvas') or not self.planet_tk.canvas.winfo_exists():
+            self.running = False
+            return
+            
         if self.running:
             self.update_grid()
             self.draw_grid()
@@ -77,11 +79,6 @@ class ConwayGame:
                         new_grid[i][j] = 1
         self.grid = new_grid
 
-    def update_game(self):
-        if self.running:
-            self.grid.update_conway()
-            self.draw_grid()
-            self.master.after(100, self.update_game)
     def count_live_neighbors(self, y, x):
         count = 0
         for i in range(max(0, y - 1), min(y + 2, self.grid_size[0])):
@@ -89,4 +86,3 @@ class ConwayGame:
                 if (i, j) != (y, x):
                     count += self.grid[i][j]
         return count
-
